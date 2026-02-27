@@ -6,12 +6,12 @@ from app.schemas.prediction import PredictionInput, PredictionOutput
 
 router = APIRouter()
 
-api_key_header = APIKeyHeader(name="X-API-Key")
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 async def verify_api_key(request: Request, api_key: str = Security(api_key_header)):
-    if api_key != request.app.state.settings.api_key:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Clé API invalide")
+    if not api_key or api_key != request.app.state.settings.api_key:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Clé API manquante ou invalide")
 
 SAT_COLS = [
     "satisfaction_employee_environnement",
