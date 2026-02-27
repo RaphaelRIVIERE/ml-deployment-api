@@ -1,9 +1,17 @@
 import numpy as np
 import pandas as pd
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Security, status
+from fastapi.security import APIKeyHeader
 from app.schemas.prediction import PredictionInput, PredictionOutput
 
 router = APIRouter()
+
+api_key_header = APIKeyHeader(name="X-API-Key")
+
+
+async def verify_api_key(request: Request, api_key: str = Security(api_key_header)):
+    if api_key != request.app.state.settings.api_key:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Clé API invalide")
 
 SAT_COLS = [
     "satisfaction_employee_environnement",
@@ -36,7 +44,7 @@ def health_check():
     return {"status": "ok", "message": "API opérationnelle"}
 
 
-@router.get("/model/info", summary="Informations sur le modèle", description="Retourne les métadonnées du modèle déployé")
+@router.get("/model/info", summary="Informations sur le modèle", description="Retourne les métadonnées du modèle déployé", dependencies=[Depends(verify_api_key)])
 def model_info(request: Request):
     return {
         "algorithme": "Régression Logistique",
@@ -45,7 +53,7 @@ def model_info(request: Request):
     }
 
 
-@router.post("/predict", response_model=PredictionOutput, summary="Prédiction du risque de départ", description="Envoie les features RH d'un employé et reçoit une prédiction")
+@router.post("/predict", response_model=PredictionOutput, summary="Prédiction du risque de départ", description="Envoie les features RH d'un employé et reçoit une prédiction", dependencies=[Depends(verify_api_key)])
 def predict_churn(data: PredictionInput, request: Request):
     pipeline = request.app.state.pipeline
     threshold = request.app.state.threshold
