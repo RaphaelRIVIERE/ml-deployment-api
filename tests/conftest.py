@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from app.main import app
+from app.db.session import get_db
+
 
 TEST_API_KEY = "test-secret-key"
 
@@ -22,6 +24,12 @@ VALID_PAYLOAD = {
     "heure_supplementaires": 0, "frequence_deplacement": 1,
     "distance_domicile_travail": 10, "revenu_mensuel": 5000,
 }
+
+def override_get_db():
+    yield MagicMock()
+    
+app.dependency_overrides[get_db] = override_get_db
+
 
 @pytest.fixture(scope="module")
 def client():

@@ -3,6 +3,9 @@ import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, Request, Security, status
 from fastapi.security import APIKeyHeader
 from app.schemas.prediction import PredictionInput, PredictionOutput
+from sqlalchemy.orm import Session
+from app.db.session import get_db
+from app.db import crud
 
 router = APIRouter()
 
@@ -54,11 +57,13 @@ def model_info(request: Request):
 
 
 @router.post("/predict", response_model=PredictionOutput, summary="Prédiction du risque de départ", description="Envoie les features RH d'un employé et reçoit une prédiction", dependencies=[Depends(verify_api_key)])
-def predict_churn(data: PredictionInput, request: Request):
+def predict_churn(data: PredictionInput, request: Request, db: Session = Depends(get_db)):
     pipeline = request.app.state.pipeline
     threshold = request.app.state.threshold
     df = _compute_features(pd.DataFrame([data.model_dump()]))
     proba = float(pipeline.predict_proba(df)[0][1])
     prediction = int(proba >= threshold)
     label = "Quitte" if prediction == 1 else "Reste"
-    return PredictionOutput(prediction=prediction, label=label, probabilite=round(proba, 4))
+    output = PredictionOutput(prediction=prediction, label=label, probabilite=round(proba, 4))
+    crud.log_prediction(db, data, output)
+    return output
