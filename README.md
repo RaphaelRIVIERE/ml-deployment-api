@@ -195,5 +195,33 @@ Réponse :
 | `label` | string | `"Reste"` ou `"Quitte"` |
 | `probabilite` | float | Probabilité de départ (entre 0 et 1) |
 
+## Tests
+
+### Lancer les tests
+
+```bash
+pytest tests/ -v
+```
+
+### Rapport de couverture
+
+Affichage dans le terminal :
+```bash
+pytest tests/ --cov=app --cov-report=term-missing
+```
+
+Rapport HTML navigable (généré dans `htmlcov/`) :
+```bash
+pytest tests/ --cov=app --cov-report=term-missing --cov-report=html
+```
+
+### Structure des tests
+
+| Fichier | Contenu |
+|---|---|
+| `tests/conftest.py` | Fixtures partagées (client de test, payload valide) |
+| `tests/test_api.py` | Tests des endpoints HTTP (health, predict, auth) |
+| `tests/test_model.py` | Tests du pipeline ML (chargement, prédiction, seuil) |
+
 ## Déploiement
 *À compléter*
