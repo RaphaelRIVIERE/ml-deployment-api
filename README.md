@@ -80,6 +80,109 @@ API_KEY=ta_clé_secrète
 > ```
 > En CI/CD, injecter les secrets via **GitHub Actions Secrets** (Settings → Secrets and variables → Actions).
 
+## Base de données
+
+### ORM et connexion
+
+- **ORM** : SQLAlchemy avec le style `declarative_base()`
+- **Driver** : `psycopg2-binary` pour la connexion PostgreSQL
+- **Lancement** : PostgreSQL via Docker (`docker-compose up -d`)
+
+### Schéma des tables
+
+#### `employees` — dataset complet (1470 lignes)
+
+Stocke l'intégralité du dataset HR. La colonne `a_quitte_l_entreprise` est convertie de `"Oui"/"Non"` en `BOOLEAN`.
+
+#### `predictions` — log des appels API
+
+Enregistre chaque appel à `POST /predict` avec les inputs envoyés, les outputs retournés et un timestamp automatique (`created_at TIMESTAMPTZ`).
+
+> Les deux tables sont **indépendantes** : les prédictions API ne référencent pas la table `employees` car les employés soumis à prédiction ne sont pas forcément dans le dataset.
+
+### Diagramme UML
+
+```mermaid
+erDiagram
+    EMPLOYEES {
+        int id PK
+        timestamptz created_at
+        int age
+        smallint genre
+        varchar statut_marital
+        int revenu_mensuel
+        varchar departement
+        varchar poste
+        smallint niveau_hierarchique_poste
+        varchar domaine_etude
+        smallint niveau_education
+        int nombre_experiences_precedentes
+        int annee_experience_totale
+        int annees_dans_l_entreprise
+        int annees_dans_le_poste_actuel
+        int annees_sous_responsable_actuel
+        int annees_depuis_la_derniere_promotion
+        smallint note_evaluation_actuelle
+        smallint note_evaluation_precedente
+        int augmentation_salaire_precedente
+        int nb_formations_suivies
+        int nombre_participation_pee
+        smallint satisfaction_employee_environnement
+        smallint satisfaction_employee_nature_travail
+        smallint satisfaction_employee_equipe
+        smallint satisfaction_employee_equilibre_pro_perso
+        smallint heure_supplementaires
+        smallint frequence_deplacement
+        int distance_domicile_travail
+        boolean a_quitte_l_entreprise
+    }
+
+    PREDICTIONS {
+        int id PK
+        timestamptz created_at
+        int age
+        smallint genre
+        varchar statut_marital
+        varchar poste
+        varchar domaine_etude
+        smallint niveau_education
+        int nombre_experiences_precedentes
+        int annee_experience_totale
+        int annees_dans_l_entreprise
+        int annees_dans_le_poste_actuel
+        int annees_sous_responsable_actuel
+        int annees_depuis_la_derniere_promotion
+        smallint note_evaluation_actuelle
+        smallint note_evaluation_precedente
+        int augmentation_salaire_precedente
+        int nb_formations_suivies
+        int nombre_participation_pee
+        smallint satisfaction_employee_environnement
+        smallint satisfaction_employee_nature_travail
+        smallint satisfaction_employee_equipe
+        smallint satisfaction_employee_equilibre_pro_perso
+        smallint heure_supplementaires
+        smallint frequence_deplacement
+        int distance_domicile_travail
+        int revenu_mensuel
+        smallint prediction
+        float probabilite
+    }
+```
+
+### Contraintes notables
+
+| Colonne | Contrainte |
+|---|---|
+| `genre` | `SMALLINT` — `0` = Femme, `1` = Homme |
+| `heure_supplementaires` | `SMALLINT` — `0` = Non, `1` = Oui |
+| `frequence_deplacement` | `SMALLINT` — `0` = Aucun, `1` = Occasionnel, `2` = Fréquent |
+| `a_quitte_l_entreprise` | `BOOLEAN` — converti depuis `"Oui"/"Non"` du CSV |
+| `created_at` | `TIMESTAMPTZ` — posé par PostgreSQL (`server_default=func.now()`) |
+| Scores satisfaction / évaluation | `SMALLINT` — valeurs entre `0` et `5` |
+
+---
+
 ## Utilisation
 
 ### Lancer l'API

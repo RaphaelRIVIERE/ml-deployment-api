@@ -8,8 +8,14 @@ from ml_model.loader import load_pipeline
 
 class Settings(BaseSettings):
     api_key: str = ""
+    db_host: str = ""
+    db_port: int = 5432
+    db_user: str = ""
+    db_password: str = ""
+    db_name: str = ""
 
     model_config = {"env_file": ".env"}
+
 
     @field_validator("api_key")
     @classmethod
@@ -28,7 +34,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Futurisys HR Churn API",
     description="API de prédiction du risque de départ des employés",
-    version="0.3.0",
+    version="0.4.0",
     lifespan=lifespan,
 )
 
