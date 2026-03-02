@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
 
 jobs:
   test:
@@ -23,8 +24,9 @@ jobs:
       - name: Exécution des tests
         run: pytest tests/ -v
 
-  deploy:
+  deploy-prod:
     needs: test
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout du code
@@ -32,11 +34,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Déploiement sur Hugging Face
+      - name: Déploiement sur Hugging Face (prod)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git config user.email "action@github.com"
           git config user.name "GitHub Actions"
-          git remote add hf https://rriviere:$HF_TOKEN@huggingface.co/spaces/rriviere/attrition-api
+          git remote add hf https://rriviere:$HF_TOKEN@huggingface.co/spaces/${{ vars.HF_SPACE_PROD }}
           git push hf main --force
+
+  deploy-dev:
+    needs: test
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Déploiement sur Hugging Face (dev)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Actions"
+          git remote add hf https://rriviere:$HF_TOKEN@huggingface.co/spaces/${{ vars.HF_SPACE_DEV }}
+          git push hf HEAD:main --force
