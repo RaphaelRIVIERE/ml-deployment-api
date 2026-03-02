@@ -1,0 +1,40 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Configuration Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installation des dépendances
+        run: pip install -r requirements.txt
+
+      - name: Exécution des tests
+        run: pytest tests/ -v
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Déploiement sur Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Actions"
+          git remote add hf https://rriviere:$HF_TOKEN@huggingface.co/spaces/rriviere/attrition-api
+          git push hf main --force
