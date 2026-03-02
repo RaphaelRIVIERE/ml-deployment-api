@@ -7,7 +7,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import pandas as pd
-from app.db.session import SessionLocal
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from app.db.session import get_database_url
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=create_engine(get_database_url()))
 from app.db.models import Employee
 from typing import cast, Any
 
