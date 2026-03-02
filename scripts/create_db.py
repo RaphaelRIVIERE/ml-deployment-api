@@ -7,8 +7,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from sqlalchemy import create_engine, text
-from app.db.session import engine
+from app.db.session import get_database_url
 from app.db.models import Base
+
+engine = create_engine(get_database_url())
 
 
 def create_database_if_not_exists():
