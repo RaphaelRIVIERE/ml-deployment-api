@@ -1,3 +1,12 @@
+---
+title: Attrition Api
+emoji: 🤖
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # Déployez un modèle de Machine Learning
 
 ## Description
