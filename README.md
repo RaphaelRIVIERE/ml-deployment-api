@@ -336,4 +336,26 @@ pytest tests/ --cov=app --cov-report=term-missing --cov-report=html
 | `tests/test_model.py` | Tests du pipeline ML (chargement, prédiction, seuil) |
 
 ## Déploiement
-*À compléter*
+
+### URL publique
+
+L'API est déployée sur Hugging Face Spaces :
+- **API** : https://rriviere-attrition-api.hf.space
+- **Documentation Swagger** : https://rriviere-attrition-api.hf.space/docs
+
+### Pipeline CI/CD
+
+Le déploiement est automatisé via GitHub Actions (`.github/workflows/ci_cd.yml`).
+
+**Déclenchement** : à chaque push sur la branche `main`
+
+**Étapes :**
+1. **Test** — installation des dépendances + exécution de `pytest`
+2. **Deploy** — si les tests passent, push automatique vers Hugging Face Spaces qui rebuild l'image Docker
+
+**Secrets requis dans GitHub** (Settings → Secrets → Actions) :
+| Secret | Description |
+|---|---|
+| `HF_TOKEN` | Token Hugging Face avec droits Write |
+| `API_KEY` | Clé d'authentification de l'API |
+| `DB_PASSWORD` | Mot de passe PostgreSQL |
