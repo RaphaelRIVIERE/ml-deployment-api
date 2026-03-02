@@ -33,17 +33,40 @@ def db_session():
     Base.metadata.drop_all(engine)
 
 
-def test_log_prediction_insere_en_base(db_session):
+def test_log_prediction_creates_record(db_session):
     record = log_prediction(db_session, VALID_INPUT, VALID_OUTPUT)
     assert record.id is not None
     assert record.prediction == 0
     assert record.probabilite == 0.30
 
 
-def test_log_prediction_recuperable(db_session):
+def test_log_prediction_is_retrievable(db_session):
     log_prediction(db_session, VALID_INPUT, VALID_OUTPUT)
     result = db_session.query(Prediction).first()
     assert result is not None
     assert result.age == 35
     assert result.poste == "Consultant"
     assert result.prediction == 0
+
+def test_delete_prediction(db_session):
+    record = log_prediction(db_session, VALID_INPUT, VALID_OUTPUT)
+    record_id = record.id
+
+    db_session.delete(record)
+    db_session.commit()
+
+    result = db_session.get(Prediction, record_id)
+    assert result is None
+
+def test_missing_required_field_raises_integrity_error(db_session):
+    from sqlalchemy.exc import IntegrityError
+
+    # On crée un Prediction en omettant le champ 'prediction' → NULL interdit
+    invalid_record = Prediction(
+        **VALID_INPUT.model_dump(),
+        probabilite=0.30,
+        # prediction= intentionnellement absent → None → violation NOT NULL
+    )
+    db_session.add(invalid_record)
+    with pytest.raises(IntegrityError):
+        db_session.commit()
