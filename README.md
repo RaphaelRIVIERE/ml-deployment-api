@@ -6,6 +6,7 @@ colorTo: green
 sdk: docker
 pinned: false
 ---
+![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
 
 # Déployez un modèle de Machine Learning
 
@@ -37,7 +38,8 @@ mon-projet/
 │
 ├── tests/
 │   ├── test_api.py
-│   └── test_model.py
+│   ├── test_model.py
+│   └── test_db.py
 │
 ├── .github/workflows/
 ├── requirements.txt
@@ -327,6 +329,20 @@ Rapport HTML navigable (généré dans `htmlcov/`) :
 pytest tests/ --cov=app --cov-report=term-missing --cov-report=html
 ```
 
+### Résultat de couverture
+
+Dernière mesure : **95%** (13 tests, 193 instructions)
+
+| Fichier | Couverture |
+|---|---|
+| `app/db/crud.py` | 100% |
+| `app/db/models.py` | 100% |
+| `app/schemas/prediction.py` | 100% |
+| `app/routes/predict.py` | 98% |
+| `app/main.py` | 96% |
+| `app/db/session.py` | 56% *(infrastructure PostgreSQL, non testée en isolation)* |
+
+
 ### Structure des tests
 
 | Fichier | Contenu |
@@ -334,6 +350,8 @@ pytest tests/ --cov=app --cov-report=term-missing --cov-report=html
 | `tests/conftest.py` | Fixtures partagées (client de test, payload valide) |
 | `tests/test_api.py` | Tests des endpoints HTTP (health, predict, auth) |
 | `tests/test_model.py` | Tests du pipeline ML (chargement, prédiction, seuil) |
+| `tests/test_db.py`    | Tests de la couche base de données (CRUD, contraintes d'intégrité) |
+
 
 ## Déploiement
 
