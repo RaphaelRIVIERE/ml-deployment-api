@@ -43,7 +43,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Futurisys HR Churn API",
-    description="API de prédiction du risque de départ des employés",
+    description="""
+## API de prédiction du risque de départ des employés
+
+Déployée pour **Futurisys**, cette API expose un modèle de Machine Learning (Régression Logistique)
+entraîné sur des données RH pour prédire la probabilité qu'un employé quitte l'entreprise.
+
+### Authentification
+Toutes les routes protégées nécessitent un header `X-API-Key`.
+""",
     version="0.8.0",
     lifespan=lifespan,
 )
