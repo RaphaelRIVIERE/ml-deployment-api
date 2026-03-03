@@ -31,7 +31,7 @@ def model_info(request: Request):
     }
 
 
-@router.post("/predict", tags=["Prédictions"], response_model=PredictionOutput, response_description="oumet les données RH d'un employé au modèle et retourne une prédiction de départ. Chaque appel est enregistré en base de données.", summary="Prédiction du risque de départ", description="Envoie les features RH d'un employé et reçoit une prédiction", dependencies=[Depends(verify_api_key)])
+@router.post("/predict", tags=["Prédictions"], response_model=PredictionOutput, response_description="Soumet les données RH d'un employé au modèle et retourne une prédiction de départ. Chaque appel est enregistré en base de données.", summary="Prédiction du risque de départ", description="Envoie les features RH d'un employé et reçoit une prédiction", dependencies=[Depends(verify_api_key)])
 def predict_churn(data: PredictionInput, request: Request, db: Session = Depends(get_db)):
     pipeline = request.app.state.pipeline
     threshold = request.app.state.threshold
