@@ -8,14 +8,15 @@ pinned: false
 ---
 ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
 
-# Déployez un modèle de Machine Learning
+# API de prédiction d'attrition RH
 
 ## Description
-API de déploiement d'un modèle de Machine Learning développée avec FastAPI.
+API REST de prédiction du risque d'attrition RH développée avec FastAPI. Elle expose un modèle de Régression Logistique entraîné sur le dataset IBM HR Attrition (1470 employés), prédit la probabilité de départ d'un employé, et persiste chaque appel en base de données PostgreSQL pour des analyses ultérieures.
+
 
 ## Structure du projet
 ```
-mon-projet/
+ml-deployment-api/
 │
 ├── app/
 │   ├── main.py
@@ -29,20 +30,36 @@ mon-projet/
 │   │   └── crud.py
 │
 ├── ml_model/
-│   ├── model.pkl
+│   ├── pipeline.pkl
+│   ├── preprocessing.py
 │   └── loader.py
 │
 ├── scripts/
 │   ├── create_db.py
-│   └── schema.sql
+│   ├── insert_data.py
+│   └── query_db.py
 │
 ├── tests/
+│   ├── conftest.py
 │   ├── test_api.py
 │   ├── test_model.py
 │   └── test_db.py
 │
+├── docs/
+│   └── uml.png
+│
+├── data/
+│   └── dataset.csv
+│
+├── examples/
+│   └── predictions_sample.csv
+│
 ├── .github/workflows/
+│   └── ci_cd.yml
+├── Dockerfile
+├── docker-compose.yaml
 ├── requirements.txt
+├── .env.example
 ├── .gitignore
 └── README.md
 ```
@@ -50,14 +67,14 @@ mon-projet/
 ## Installation
 
 ### Prérequis
-- Python 3.8+
-- PostgreSQL
+- Python 3.12+
+- Docker (pour PostgreSQL via docker-compose)
 
 ### Étapes
 1. Cloner le repo
 ```bash
 git clone git@github.com:RaphaelRIVIERE/ml-deployment-api.git
-cd ton-repo
+cd ml-deployment-api
 ```
 
 2. Créer et activer le venv
@@ -71,6 +88,21 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+4. Lancer PostgreSQL
+```bash
+docker-compose up -d
+```
+
+5. Créer les tables
+```bash
+python scripts/create_db.py
+```
+
+6. Insérer le dataset
+```bash
+python scripts/insert_data.py
+```
+
 ## Configuration
 
 Un fichier `.env.example` est fourni à la racine du projet. Il suffit de le copier et de renseigner ta clé API :
@@ -79,11 +111,16 @@ Un fichier `.env.example` est fourni à la racine du projet. Il suffit de le cop
 cp .env.example .env
 ```
 
-Puis éditer `.env` et remplacer la valeur de `API_KEY` :
+Le fichier `.env.example` contient les variables suivantes :
 
-```
-API_KEY=ta_clé_secrète
-```
+| Variable | Description | Valeur par défaut |
+|---|---|---|
+| `API_KEY` | Clé d'authentification de l'API | — |
+| `DB_HOST` | Hôte PostgreSQL | `localhost` |
+| `DB_PORT` | Port PostgreSQL | `5432` |
+| `DB_USER` | Utilisateur PostgreSQL | — |
+| `DB_PASSWORD` | Mot de passe PostgreSQL | — |
+| `DB_NAME` | Nom de la base de données | `attrition_db` |
 
 > **Sécurité** : Ne jamais committer `.env` (déjà listé dans `.gitignore`). Générer une clé robuste avec :
 > ```bash
@@ -268,11 +305,13 @@ curl -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
   -d '{
     "age": 35,
-    "genre": 1,
+    "genre": "M",
     "statut_marital": "Marié(e)",
     "poste": "Consultant",
     "domaine_etude": "Infra & Cloud",
     "niveau_education": 3,
+    "departement": "Ventes",
+    "niveau_hierarchique_poste": 2,
     "nombre_experiences_precedentes": 2,
     "annee_experience_totale": 10,
     "annees_dans_l_entreprise": 5,
@@ -288,8 +327,8 @@ curl -X POST http://localhost:8000/predict \
     "satisfaction_employee_nature_travail": 4,
     "satisfaction_employee_equipe": 3,
     "satisfaction_employee_equilibre_pro_perso": 2,
-    "heure_supplementaires": 0,
-    "frequence_deplacement": 1,
+    "heure_supplementaires": "Non",
+    "frequence_deplacement": "Occasionnel",
     "distance_domicile_travail": 10,
     "revenu_mensuel": 5000
   }'
@@ -378,13 +417,18 @@ Le déploiement est automatisé via GitHub Actions (`.github/workflows/ci_cd.yml
 1. **Test** — installation des dépendances + exécution de `pytest`
 2. **Deploy** — si les tests passent, push automatique vers Hugging Face Spaces qui rebuild l'image Docker
 
-**Secrets requis dans GitHub** (Settings → Secrets → Actions) :
+**Secrets** (Settings → Secrets → Actions) :
 | Secret | Description |
 |---|---|
 | `HF_TOKEN` | Token Hugging Face avec droits Write |
-| `API_KEY` | Clé d'authentification de l'API |
-| `DB_PASSWORD` | Mot de passe PostgreSQL |
-| `HF_REPO_DEV` | URL du Space Hugging Face de développement |
+| `API_KEY` | Clé API injectée dans HF Spaces |
+| `DB_PASSWORD` | Mot de passe PostgreSQL injecté dans HF Spaces |
+
+**Variables** (Settings → Variables → Actions) :
+| Variable | Description |
+|---|---|
+| `HF_SPACE_PROD` | Nom du Space HF de production (ex : `username/space-name`) |
+| `HF_SPACE_DEV` | Nom du Space HF de développement |
 
 ---
 
