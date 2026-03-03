@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from app.routes import predict
 from ml_model.loader import load_pipeline
 
@@ -28,8 +30,16 @@ class Settings(BaseSettings):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.pipeline, app.state.threshold = load_pipeline()
-    app.state.settings = Settings()
+    settings = Settings()
+    app.state.settings = settings
+    db_url = (
+        f"postgresql+psycopg2://{settings.db_user}:{settings.db_password}"
+        f"@{settings.db_host}:{settings.db_port}/{settings.db_name}"
+    )
+    app.state.engine = create_engine(db_url)
+    app.state.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=app.state.engine)
     yield
+    app.state.engine.dispose()
 
 app = FastAPI(
     title="Futurisys HR Churn API",
