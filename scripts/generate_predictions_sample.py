@@ -3,30 +3,57 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pandas as pd
-from ml_model.loader import load_pipeline
+from dotenv import load_dotenv
+load_dotenv()
 
-CSV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "data_merged.csv")
-OUTPUT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "examples", "predictions_sample.csv")
+import pandas as pd
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from app.db.models import Employee
+from ml_model.loader import load_pipeline
+from app.schemas.prediction import PredictionInput
+
+
+EXAMPLES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "examples")
+INPUT_PATH = os.path.join(EXAMPLES_DIR, "input_sample.csv")
+OUTPUT_PATH = os.path.join(EXAMPLES_DIR, "output_sample.csv")
 
 N_SAMPLES = 10
 
+FEATURE_COLUMNS = list(PredictionInput.model_fields.keys())
+
 
 def generate():
+    db_url = (
+        f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
+        f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+    )
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=create_engine(db_url))
+    session = SessionLocal()
+
+    try:
+        rows = session.query(Employee).limit(N_SAMPLES).all()
+        inputs = pd.DataFrame(
+            [{col: getattr(e, col) for col in FEATURE_COLUMNS} for e in rows]
+        )
+    finally:
+        session.close()
+
     pipeline, threshold = load_pipeline()
-
-    df = pd.read_csv(CSV_PATH).head(N_SAMPLES)
-    inputs = df.drop(columns=["a_quitte_l_entreprise"])
-
     probas = pipeline.predict_proba(inputs.copy())[:, 1]
     predictions = (probas >= threshold).astype(int)
 
-    inputs["prediction"] = predictions
-    inputs["probabilite"] = probas.round(4)
-    inputs["label"] = ["Quitte" if p == 1 else "Reste" for p in predictions]
+    os.makedirs(EXAMPLES_DIR, exist_ok=True)
 
-    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
-    inputs.to_csv(OUTPUT_PATH, index=False)
+    inputs.to_csv(INPUT_PATH, index=False)
+    print(f"Fichier généré : {INPUT_PATH} ({N_SAMPLES} lignes)")
+
+    outputs = pd.DataFrame({
+        "prediction": predictions,
+        "label": ["Quitte" if p == 1 else "Reste" for p in predictions],
+        "probabilite": probas.round(4),
+    })
+    outputs.to_csv(OUTPUT_PATH, index=False)
     print(f"Fichier généré : {OUTPUT_PATH} ({N_SAMPLES} lignes)")
 
 

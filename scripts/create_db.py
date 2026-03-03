@@ -7,10 +7,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from sqlalchemy import create_engine, text
-from app.db.session import get_database_url
 from app.db.models import Base
 
-engine = create_engine(get_database_url())
+db_url = (
+    f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
+    f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+)
+engine = create_engine(db_url)
 
 
 def create_database_if_not_exists():

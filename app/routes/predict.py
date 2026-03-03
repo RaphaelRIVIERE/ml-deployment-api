@@ -17,12 +17,12 @@ async def verify_api_key(request: Request, api_key: str = Security(api_key_heade
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Clé API manquante ou invalide")
 
 
-@router.get("/health", summary="Health check", description="Vérifie que l'API est opérationnelle")
+@router.get("/health", tags=["Monitoring"], summary="Vérification de l'état de l'API", description="Retourne le statut de l'API. Aucune authentification requise.")
 def health_check():
     return {"status": "ok", "message": "API opérationnelle"}
 
 
-@router.get("/model/info", summary="Informations sur le modèle", description="Retourne les métadonnées du modèle déployé", dependencies=[Depends(verify_api_key)])
+@router.get("/model/info", tags=["Prédictions"], summary="Informations sur le modèle", description="Retourne l'algorithme utilisé, le seuil de décision et une description du modèle déployé.", dependencies=[Depends(verify_api_key)])
 def model_info(request: Request):
     return {
         "algorithme": "Régression Logistique",
@@ -31,7 +31,7 @@ def model_info(request: Request):
     }
 
 
-@router.post("/predict", response_model=PredictionOutput, summary="Prédiction du risque de départ", description="Envoie les features RH d'un employé et reçoit une prédiction", dependencies=[Depends(verify_api_key)])
+@router.post("/predict", tags=["Prédictions"], response_model=PredictionOutput, response_description="Soumet les données RH d'un employé au modèle et retourne une prédiction de départ. Chaque appel est enregistré en base de données.", summary="Prédiction du risque de départ", description="Envoie les features RH d'un employé et reçoit une prédiction", dependencies=[Depends(verify_api_key)])
 def predict_churn(data: PredictionInput, request: Request, db: Session = Depends(get_db)):
     pipeline = request.app.state.pipeline
     threshold = request.app.state.threshold

@@ -1,7 +1,7 @@
 import joblib
 from pathlib import Path
 
-MODEL_PATH = Path("ml_model/best_pipeline.pkl")
+MODEL_PATH = Path("ml_model/pipeline.pkl")
 
 
 def load_pipeline():
