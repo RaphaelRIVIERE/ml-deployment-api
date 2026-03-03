@@ -52,7 +52,8 @@ ml-deployment-api/
 │   └── dataset.csv
 │
 ├── examples/
-│   └── predictions_sample.csv
+│   ├── input_sample.csv          # Exemples d'inputs envoyés au modèle ML
+│   └── output_sample.csv         # Exemples d'outputs retournés par le modèle ML
 │
 ├── .github/workflows/
 │   └── ci_cd.yml

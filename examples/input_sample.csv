@@ -1,0 +1,11 @@
+age,genre,statut_marital,poste,domaine_etude,niveau_education,departement,niveau_hierarchique_poste,nombre_experiences_precedentes,annee_experience_totale,annees_dans_l_entreprise,annees_dans_le_poste_actuel,annees_sous_responsable_actuel,annees_depuis_la_derniere_promotion,note_evaluation_actuelle,note_evaluation_precedente,augmentation_salaire_precedente,nb_formations_suivies,nombre_participation_pee,satisfaction_employee_environnement,satisfaction_employee_nature_travail,satisfaction_employee_equipe,satisfaction_employee_equilibre_pro_perso,heure_supplementaires,frequence_deplacement,distance_domicile_travail,revenu_mensuel
+41,F,Célibataire,Cadre Commercial,Infra & Cloud,2,Commercial,2,8,8,6,4,5,0,3,3,11,0,0,2,4,1,1,Oui,Occasionnel,1,5993
+49,M,Marié(e),Assistant de Direction,Infra & Cloud,1,Consulting,2,1,10,10,7,7,1,4,2,23,3,1,3,2,4,3,Non,Frequent,8,5130
+37,M,Célibataire,Consultant,Autre,2,Consulting,1,6,7,0,0,0,0,3,2,15,3,0,4,3,2,3,Oui,Occasionnel,2,2090
+33,F,Marié(e),Assistant de Direction,Infra & Cloud,4,Consulting,1,1,8,8,7,0,3,3,3,11,3,0,4,3,3,3,Oui,Frequent,3,2909
+27,M,Marié(e),Consultant,Transformation Digitale,1,Consulting,1,9,6,2,2,2,2,3,3,12,3,1,1,2,4,3,Non,Occasionnel,2,3468
+32,M,Célibataire,Consultant,Infra & Cloud,2,Consulting,1,0,8,7,7,6,3,3,3,13,2,0,4,4,3,2,Non,Frequent,2,3068
+59,F,Marié(e),Consultant,Transformation Digitale,3,Consulting,1,4,12,1,0,0,0,4,4,20,3,3,3,1,1,2,Oui,Occasionnel,3,2670
+30,M,Divorcé(e),Consultant,Infra & Cloud,1,Consulting,1,1,1,1,0,0,0,4,3,22,2,1,4,3,2,3,Non,Occasionnel,24,2693
+38,M,Célibataire,Tech Lead,Infra & Cloud,3,Consulting,3,0,10,9,7,8,1,4,2,21,2,0,4,3,2,3,Non,Frequent,23,9526
+36,M,Marié(e),Manager,Transformation Digitale,3,Consulting,2,6,17,7,7,7,7,3,3,13,3,2,3,3,2,2,Non,Occasionnel,27,5237
