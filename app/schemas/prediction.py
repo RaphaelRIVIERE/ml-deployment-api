@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 class PredictionInput(BaseModel):
     # --- Identité ---
     age: int = Field(..., ge=18, le=65, examples=[35])
-    genre: int = Field(..., ge=0, le=1, examples=[1], description="0 = Femme, 1 = Homme")
+    genre: Literal["M", "F"] = Field(..., examples=["M"], description="M = Homme, F = Femme")
     statut_marital: Literal["Marié(e)", "Célibataire", "Divorcé(e)"] = Field(..., examples=["Marié(e)"])
 
     # --- Poste ---
@@ -19,6 +19,8 @@ class PredictionInput(BaseModel):
         "Entrepreunariat", "Autre", "Ressources Humaines",
     ] = Field(..., examples=["Infra & Cloud"])
     niveau_education: int = Field(..., ge=1, le=5, examples=[3])
+    departement: str = Field(..., examples=["Ventes"])
+    niveau_hierarchique_poste: int = Field(..., ge=1, examples=[2])
 
     # --- Expérience ---
     nombre_experiences_precedentes: int = Field(..., ge=0, examples=[2])
@@ -42,8 +44,8 @@ class PredictionInput(BaseModel):
     satisfaction_employee_equilibre_pro_perso: int = Field(..., ge=0, le=5, examples=[2])
 
     # --- Conditions ---
-    heure_supplementaires: int = Field(..., ge=0, le=1, examples=[0], description="0 = Non, 1 = Oui")
-    frequence_deplacement: int = Field(..., ge=0, le=2, examples=[1], description="0 = Aucun, 1 = Occasionnel, 2 = Fréquent")
+    heure_supplementaires: Literal["Oui", "Non"] = Field(..., examples=["Non"])
+    frequence_deplacement: Literal["Aucun", "Occasionnel", "Fréquent"] = Field(..., examples=["Occasionnel"])
     distance_domicile_travail: int = Field(..., ge=0, examples=[10])
     revenu_mensuel: int = Field(..., ge=0, examples=[5000])
 

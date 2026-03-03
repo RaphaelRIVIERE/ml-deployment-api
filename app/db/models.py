@@ -15,7 +15,7 @@ class Employee(Base):
 
     # Identité
     age = Column(Integer, nullable=False)
-    genre = Column(SmallInteger, nullable=False)          # 0=Femme, 1=Homme
+    genre = Column(String, nullable=False)
     statut_marital = Column(String, nullable=False)
     revenu_mensuel = Column(Integer, nullable=False)
 
@@ -48,8 +48,8 @@ class Employee(Base):
     satisfaction_employee_equilibre_pro_perso = Column(SmallInteger, nullable=False)
 
     # Conditions
-    heure_supplementaires = Column(SmallInteger, nullable=False)  # 0=Non, 1=Oui
-    frequence_deplacement = Column(SmallInteger, nullable=False)  # 0=Aucun, 1=Occasionnel, 2=Fréquent
+    heure_supplementaires = Column(String, nullable=False)
+    frequence_deplacement = Column(String, nullable=False)
     distance_domicile_travail = Column(Integer, nullable=False)
 
     # Cible
@@ -64,11 +64,13 @@ class Prediction(Base):
 
     # Inputs — miroir exact de PredictionInput
     age = Column(Integer, nullable=False)
-    genre = Column(SmallInteger, nullable=False)
+    genre = Column(String, nullable=False)
     statut_marital = Column(String, nullable=False)
     poste = Column(String, nullable=False)
     domaine_etude = Column(String, nullable=False)
     niveau_education = Column(SmallInteger, nullable=False)
+    departement = Column(String, nullable=False)
+    niveau_hierarchique_poste = Column(SmallInteger, nullable=False)
     nombre_experiences_precedentes = Column(Integer, nullable=False)
     annee_experience_totale = Column(Integer, nullable=False)
     annees_dans_l_entreprise = Column(Integer, nullable=False)
@@ -84,8 +86,8 @@ class Prediction(Base):
     satisfaction_employee_nature_travail = Column(SmallInteger, nullable=False)
     satisfaction_employee_equipe = Column(SmallInteger, nullable=False)
     satisfaction_employee_equilibre_pro_perso = Column(SmallInteger, nullable=False)
-    heure_supplementaires = Column(SmallInteger, nullable=False)
-    frequence_deplacement = Column(SmallInteger, nullable=False)
+    heure_supplementaires = Column(String, nullable=False)
+    frequence_deplacement = Column(String, nullable=False)
     distance_domicile_travail = Column(Integer, nullable=False)
     revenu_mensuel = Column(Integer, nullable=False)
 
