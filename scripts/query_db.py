@@ -13,7 +13,6 @@ from app.db.session import get_database_url
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=create_engine(get_database_url()))
 from app.db.models import Employee, Prediction
-from app.routes.predict import _compute_features
 from ml_model.loader import load_pipeline
 
 
@@ -43,7 +42,8 @@ def predict_from_db(session, employee_id: int):
 
     data = {col: getattr(emp, col) for col in [
         "age", "genre", "statut_marital", "poste", "domaine_etude",
-        "niveau_education", "nombre_experiences_precedentes", "annee_experience_totale",
+        "niveau_education", "departement", "niveau_hierarchique_poste",
+        "nombre_experiences_precedentes", "annee_experience_totale",
         "annees_dans_l_entreprise", "annees_dans_le_poste_actuel",
         "annees_sous_responsable_actuel", "annees_depuis_la_derniere_promotion",
         "note_evaluation_actuelle", "note_evaluation_precedente",
@@ -54,7 +54,7 @@ def predict_from_db(session, employee_id: int):
         "frequence_deplacement", "distance_domicile_travail", "revenu_mensuel",
     ]}
 
-    df = _compute_features(pd.DataFrame([data]))
+    df = pd.DataFrame([data])
     proba = float(pipeline.predict_proba(df)[0][1])
     prediction = int(proba >= threshold)
     label = "Quitte" if prediction == 1 else "Reste"
@@ -70,7 +70,7 @@ def stats_predictions(session):
     print(f"Total : {total}")
     if total > 0:
         derniere = session.query(Prediction).order_by(Prediction.id.desc()).first()
-        print(f"Dernière : id={derniere.id} | {derniere.label} | proba={derniere.probabilite} | {derniere.created_at}")
+        print(f"Dernière : id={derniere.id} | {'Quitte' if derniere.prediction == 1 else 'Reste'} | proba={derniere.probabilite} | {derniere.created_at}")
 
 
 if __name__ == "__main__":
