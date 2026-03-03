@@ -9,9 +9,13 @@ load_dotenv()
 import pandas as pd
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from app.db.session import get_database_url
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=create_engine(get_database_url()))
+db_url = (
+    f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
+    f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=create_engine(db_url))
+
 from app.db.models import Employee, Prediction
 from ml_model.loader import load_pipeline
 
