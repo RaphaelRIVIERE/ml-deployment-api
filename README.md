@@ -247,7 +247,7 @@ La documentation interactive Swagger est disponible sur `http://localhost:8000/d
 
 ### Authentification
 
-Tous les endpoints (sauf `/health`) nécessitent une clé API passée dans le header HTTP :
+Tous les endpoints (sauf `/` et `/health`) nécessitent une clé API passée dans le header HTTP :
 
 ```
 X-API-Key: ta_clé_secrète
@@ -260,6 +260,26 @@ X-API-Key: ta_clé_secrète
 ---
 
 ### Endpoints
+
+#### `GET /` — Accueil de l'API
+
+Retourne les informations générales de l'API. Pas d'authentification requise.
+
+```bash
+curl http://localhost:8000/
+```
+
+Réponse :
+```json
+{
+  "name": "Futurisys HR Churn API",
+  "version": "1.0.0",
+  "documentation": "http://localhost:8000/docs",
+  "health": "http://localhost:8000/health"
+}
+```
+
+---
 
 #### `GET /health` — Health check
 
@@ -399,12 +419,15 @@ Dernière mesure : **95%** (13 tests, 193 instructions)
 
 ### Environnements déployés
 
-| Environnement | Branche déclenchante | URL |
-|---|---|---|
-| Production | `main` | https://rriviere-attrition-api.hf.space |
-| Développement | `dev` | https://rriviere-attrition-api-dev.hf.space |
+| Environnement | Branche | URL | Base de données |
+|---|---|---|---|
+| Production | `main` | https://rriviere-attrition-api.hf.space | PostgreSQL Neon (instance prod) |
+| Développement | `dev` | https://rriviere-attrition-api-dev.hf.space | PostgreSQL Neon (instance dev) |
+
 
 - **Documentation Swagger (prod)** : https://rriviere-attrition-api.hf.space/docs
+
+En production et développement, PostgreSQL est hébergé sur Neon (serverless). Les credentials sont injectés via les variables/secrets HF Spaces. Les deux environnements disposent d'instances isolées
 
 ### Pipeline CI/CD
 
