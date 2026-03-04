@@ -17,6 +17,16 @@ async def verify_api_key(request: Request, api_key: str = Security(api_key_heade
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Clé API manquante ou invalide")
 
 
+@router.get("/", tags=["Général"], summary="Accueil de l'API", description="Retourne les informations générales de l'API.")
+def root(request: Request):
+    return {
+        "name": request.app.title,
+        "version": request.app.version,
+        "documentation": str(request.base_url) + "docs",
+        "health": str(request.base_url) + "health",
+    }
+
+
 @router.get("/health", tags=["Monitoring"], summary="Vérification de l'état de l'API", description="Retourne le statut de l'API. Aucune authentification requise.")
 def health_check():
     return {"status": "ok", "message": "API opérationnelle"}
