@@ -18,15 +18,23 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Cache des dépendances pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Installation des dépendances
         run: pip install -r requirements.txt
 
       - name: Exécution des tests
         run: pytest tests/ -v
 
-  deploy-prod:
+  deploy:
     needs: test
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout du code
@@ -34,30 +42,38 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Déploiement sur Hugging Face (prod)
+      - name: Sélection de l'espace Hugging Face
+        id: vars
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "hf_space=${{ vars.HF_SPACE_PROD }}" >> $GITHUB_OUTPUT
+          else
+            echo "hf_space=${{ vars.HF_SPACE_DEV }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Déploiement sur Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git config user.email "action@github.com"
-          git config user.name "GitHub Actions"
-          git remote add hf https://rriviere:$HF_TOKEN@huggingface.co/spaces/${{ vars.HF_SPACE_PROD }}
-          git push hf main --force
-
-  deploy-dev:
-    needs: test
-    if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Déploiement sur Hugging Face (dev)
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          git config user.email "action@github.com"
-          git config user.name "GitHub Actions"
-          git remote add hf https://rriviere:$HF_TOKEN@huggingface.co/spaces/${{ vars.HF_SPACE_DEV }}
-          git push hf HEAD:main --force
+          pip install huggingface_hub
+          python - <<'EOF'
+          import os
+          from huggingface_hub import HfApi
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          api.upload_folder(
+              folder_path=".",
+              repo_id="${{ steps.vars.outputs.hf_space }}",
+              repo_type="space",
+              ignore_patterns=[
+                  "docs/",
+                  "tests/",
+                  ".git/",
+                  ".github/",
+                  "__pycache__/",
+                  "*.pyc",
+                  "*.pyo",
+                  ".env",
+                  ".env.*",
+              ],
+          )
+          EOF
