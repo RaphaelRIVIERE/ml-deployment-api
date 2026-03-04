@@ -8,14 +8,15 @@ pinned: false
 ---
 ![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
 
-# Déployez un modèle de Machine Learning
+# API de prédiction d'attrition RH
 
 ## Description
-API de déploiement d'un modèle de Machine Learning développée avec FastAPI.
+API REST de prédiction du risque d'attrition RH développée avec FastAPI. Elle expose un modèle de Régression Logistique entraîné sur le dataset IBM HR Attrition (1470 employés), prédit la probabilité de départ d'un employé, et persiste chaque appel en base de données PostgreSQL pour des analyses ultérieures.
+
 
 ## Structure du projet
 ```
-mon-projet/
+ml-deployment-api/
 │
 ├── app/
 │   ├── main.py
@@ -29,20 +30,37 @@ mon-projet/
 │   │   └── crud.py
 │
 ├── ml_model/
-│   ├── model.pkl
+│   ├── pipeline.pkl
+│   ├── preprocessing.py
 │   └── loader.py
 │
 ├── scripts/
 │   ├── create_db.py
-│   └── schema.sql
+│   ├── insert_data.py
+│   └── query_db.py
 │
 ├── tests/
+│   ├── conftest.py
 │   ├── test_api.py
 │   ├── test_model.py
 │   └── test_db.py
 │
+├── docs/
+│   └── uml.png
+│
+├── data/
+│   └── dataset.csv
+│
+├── examples/
+│   ├── input_sample.csv          # Exemples d'inputs envoyés au modèle ML
+│   └── output_sample.csv         # Exemples d'outputs retournés par le modèle ML
+│
 ├── .github/workflows/
+│   └── ci_cd.yml
+├── Dockerfile
+├── docker-compose.yaml
 ├── requirements.txt
+├── .env.example
 ├── .gitignore
 └── README.md
 ```
@@ -50,14 +68,14 @@ mon-projet/
 ## Installation
 
 ### Prérequis
-- Python 3.8+
-- PostgreSQL
+- Python 3.12+
+- Docker (pour PostgreSQL via docker-compose)
 
 ### Étapes
 1. Cloner le repo
 ```bash
 git clone git@github.com:RaphaelRIVIERE/ml-deployment-api.git
-cd ton-repo
+cd ml-deployment-api
 ```
 
 2. Créer et activer le venv
@@ -71,6 +89,21 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+4. Lancer PostgreSQL
+```bash
+docker-compose up -d
+```
+
+5. Créer les tables
+```bash
+python scripts/create_db.py
+```
+
+6. Insérer le dataset
+```bash
+python scripts/insert_data.py
+```
+
 ## Configuration
 
 Un fichier `.env.example` est fourni à la racine du projet. Il suffit de le copier et de renseigner ta clé API :
@@ -79,11 +112,16 @@ Un fichier `.env.example` est fourni à la racine du projet. Il suffit de le cop
 cp .env.example .env
 ```
 
-Puis éditer `.env` et remplacer la valeur de `API_KEY` :
+Le fichier `.env.example` contient les variables suivantes :
 
-```
-API_KEY=ta_clé_secrète
-```
+| Variable | Description | Valeur par défaut |
+|---|---|---|
+| `API_KEY` | Clé d'authentification de l'API | — |
+| `DB_HOST` | Hôte PostgreSQL | `localhost` |
+| `DB_PORT` | Port PostgreSQL | `5432` |
+| `DB_USER` | Utilisateur PostgreSQL | — |
+| `DB_PASSWORD` | Mot de passe PostgreSQL | — |
+| `DB_NAME` | Nom de la base de données | `attrition_db` |
 
 > **Sécurité** : Ne jamais committer `.env` (déjà listé dans `.gitignore`). Générer une clé robuste avec :
 > ```bash
@@ -119,7 +157,7 @@ erDiagram
         int id PK
         timestamptz created_at
         int age
-        smallint genre
+        varchar genre
         varchar statut_marital
         int revenu_mensuel
         varchar departement
@@ -142,8 +180,8 @@ erDiagram
         smallint satisfaction_employee_nature_travail
         smallint satisfaction_employee_equipe
         smallint satisfaction_employee_equilibre_pro_perso
-        smallint heure_supplementaires
-        smallint frequence_deplacement
+        varchar heure_supplementaires
+        varchar frequence_deplacement
         int distance_domicile_travail
         boolean a_quitte_l_entreprise
     }
@@ -152,11 +190,13 @@ erDiagram
         int id PK
         timestamptz created_at
         int age
-        smallint genre
+        varchar genre
         varchar statut_marital
         varchar poste
         varchar domaine_etude
         smallint niveau_education
+        varchar departement
+        smallint niveau_hierarchique_poste
         int nombre_experiences_precedentes
         int annee_experience_totale
         int annees_dans_l_entreprise
@@ -172,8 +212,8 @@ erDiagram
         smallint satisfaction_employee_nature_travail
         smallint satisfaction_employee_equipe
         smallint satisfaction_employee_equilibre_pro_perso
-        smallint heure_supplementaires
-        smallint frequence_deplacement
+        varchar heure_supplementaires
+        varchar frequence_deplacement
         int distance_domicile_travail
         int revenu_mensuel
         smallint prediction
@@ -185,9 +225,9 @@ erDiagram
 
 | Colonne | Contrainte |
 |---|---|
-| `genre` | `SMALLINT` — `0` = Femme, `1` = Homme |
-| `heure_supplementaires` | `SMALLINT` — `0` = Non, `1` = Oui |
-| `frequence_deplacement` | `SMALLINT` — `0` = Aucun, `1` = Occasionnel, `2` = Fréquent |
+| `genre` | `VARCHAR` — `"M"` = Homme, `"F"` = Femme |
+| `heure_supplementaires` | `VARCHAR` — `"Oui"` ou `"Non"` |
+| `frequence_deplacement` | `VARCHAR` — `"Aucun"`, `"Occasionnel"` ou `"Fréquent"` |
 | `a_quitte_l_entreprise` | `BOOLEAN` — converti depuis `"Oui"/"Non"` du CSV |
 | `created_at` | `TIMESTAMPTZ` — posé par PostgreSQL (`server_default=func.now()`) |
 | Scores satisfaction / évaluation | `SMALLINT` — valeurs entre `0` et `5` |
@@ -266,11 +306,13 @@ curl -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
   -d '{
     "age": 35,
-    "genre": 1,
+    "genre": "M",
     "statut_marital": "Marié(e)",
     "poste": "Consultant",
     "domaine_etude": "Infra & Cloud",
     "niveau_education": 3,
+    "departement": "Ventes",
+    "niveau_hierarchique_poste": 2,
     "nombre_experiences_precedentes": 2,
     "annee_experience_totale": 10,
     "annees_dans_l_entreprise": 5,
@@ -286,8 +328,8 @@ curl -X POST http://localhost:8000/predict \
     "satisfaction_employee_nature_travail": 4,
     "satisfaction_employee_equipe": 3,
     "satisfaction_employee_equilibre_pro_perso": 2,
-    "heure_supplementaires": 0,
-    "frequence_deplacement": 1,
+    "heure_supplementaires": "Non",
+    "frequence_deplacement": "Occasionnel",
     "distance_domicile_travail": 10,
     "revenu_mensuel": 5000
   }'
@@ -355,25 +397,173 @@ Dernière mesure : **95%** (13 tests, 193 instructions)
 
 ## Déploiement
 
-### URL publique
+### Environnements déployés
 
-L'API est déployée sur Hugging Face Spaces :
-- **API** : https://rriviere-attrition-api.hf.space
-- **Documentation Swagger** : https://rriviere-attrition-api.hf.space/docs
+| Environnement | Branche déclenchante | URL |
+|---|---|---|
+| Production | `main` | https://rriviere-attrition-api.hf.space |
+| Développement | `dev` | https://rriviere-attrition-api-dev.hf.space |
+
+- **Documentation Swagger (prod)** : https://rriviere-attrition-api.hf.space/docs
 
 ### Pipeline CI/CD
 
 Le déploiement est automatisé via GitHub Actions (`.github/workflows/ci_cd.yml`).
 
-**Déclenchement** : à chaque push sur la branche `main`
+**Déclenchement** :
+- Push sur `main` → tests + déploiement en **production**
+- Push sur `dev` → tests + déploiement en **développement**
 
 **Étapes :**
 1. **Test** — installation des dépendances + exécution de `pytest`
 2. **Deploy** — si les tests passent, push automatique vers Hugging Face Spaces qui rebuild l'image Docker
 
-**Secrets requis dans GitHub** (Settings → Secrets → Actions) :
+**Secrets** (Settings → Secrets → Actions) :
 | Secret | Description |
 |---|---|
 | `HF_TOKEN` | Token Hugging Face avec droits Write |
-| `API_KEY` | Clé d'authentification de l'API |
-| `DB_PASSWORD` | Mot de passe PostgreSQL |
+| `API_KEY` | Clé API injectée dans HF Spaces |
+| `DB_PASSWORD` | Mot de passe PostgreSQL injecté dans HF Spaces |
+
+**Variables** (Settings → Variables → Actions) :
+| Variable | Description |
+|---|---|
+| `HF_SPACE_PROD` | Nom du Space HF de production (ex : `username/space-name`) |
+| `HF_SPACE_DEV` | Nom du Space HF de développement |
+
+---
+
+## Sécurité
+
+### Mécanisme d'authentification
+
+L'API utilise une authentification par clé API transmise dans le header HTTP `X-API-Key` :
+
+```bash
+curl http://localhost:8000/predict \
+  -H "X-API-Key: ta_clé_secrète" \
+  -H "Content-Type: application/json" \
+  ...
+```
+
+- Seul l'endpoint `GET /health` est public (pas d'authentification requise)
+- Une clé absente ou incorrecte retourne `401 Unauthorized`
+- La clé ne transite jamais dans l'URL pour éviter les fuites dans les logs serveur
+
+### Gestion des secrets
+
+| Contexte | Mécanisme |
+|---|---|
+| Développement local | Fichier `.env` (non commité, voir `.env.example`) |
+| GitHub Actions (CI/CD) | GitHub Secrets (Settings → Secrets → Actions) |
+| Hugging Face Spaces | HF Variables / Secrets (Settings → Variables) |
+
+Les secrets injectés au runtime sont : `API_KEY`, `HF_TOKEN`, `DB_PASSWORD`.
+
+### Bonnes pratiques en production
+
+- Toujours servir l'API derrière HTTPS (assuré par Hugging Face Spaces)
+- Générer une clé robuste : `python -c "import secrets; print(secrets.token_hex(32))"`
+- Rotation régulière de la clé API recommandée (re-déploiement nécessaire)
+- Ne jamais committer `.env` (déjà listé dans `.gitignore`)
+
+### Limitations actuelles (POC)
+
+> Cette implémentation est acceptable pour un POC / projet démonstratif.
+
+- La clé API est **statique et non hachée** : elle est comparée en clair en mémoire
+- Pas de mécanisme de révocation ou d'expiration de token
+- Pas de rate limiting (protection contre le bruteforce absente)
+- En production réelle, préférer OAuth2 / JWT avec expiration
+
+---
+
+## Processus de stockage des données
+
+### Flux complet d'un appel `/predict`
+
+```
+Requête HTTP (JSON)
+    ↓
+Validation Pydantic (PredictionInput)
+    → Champs typés, valeurs bornées (ex : age entre 18 et 65)
+    → Rejet 422 si données invalides
+    ↓
+Conversion en DataFrame pandas
+    → Mise en forme compatible avec le pipeline scikit-learn
+    ↓
+Pipeline ML (predict_proba)
+    → Retourne une probabilité entre 0 et 1
+    → Seuil 0.40 appliqué : proba ≥ 0.40 → prediction = 1 (Quitte)
+    ↓
+Log obligatoire en base de données (table predictions)
+    → Inputs + outputs + timestamp enregistrés systématiquement
+    ↓
+Réponse JSON (PredictionOutput)
+```
+
+> **Important** : chaque appel à `/predict` est **systématiquement loggé** en base de données avant le renvoi de la réponse. Il n'est pas possible d'obtenir une prédiction sans persistance.
+
+### Rôle des deux tables
+
+| Table | Contenu | Usage |
+|---|---|---|
+| `employees` | Dataset RH complet (1470 lignes) | Référence statique, utilisée pour l'entraînement initial du modèle |
+| `predictions` | Log de chaque appel API | Traçabilité, analyse des prédictions, tableau de bord |
+
+Les deux tables sont **indépendantes** : un employé soumis à prédiction n'a pas à exister dans `employees`.
+
+---
+
+## Performances du modèle
+
+### Métriques d'évaluation
+
+Le modèle est une **Régression Logistique** entraîné sur le dataset IBM HR Attrition.
+
+| Métrique | Valeur |
+|---|---|
+| Recall (classe "Quitte") | 79%  |
+| Précision (classe "Quitte") | 36%  |
+| F1-score (classe "Quitte") | 49%  |
+| PR-AUC | 59% |
+| ROC-AUC | 83%  |
+
+> Métriques évaluées sur le jeu de test (20% du dataset, stratifié).
+
+### Justification du seuil 0.40
+
+Le seuil de décision par défaut d'une régression logistique est 0.50. Il est ici abaissé à **0.40** pour :
+
+- **Maximiser la sensibilité (recall)** : dans un contexte RH, il est préférable d'identifier trop d'employés à risque plutôt que d'en manquer (le coût de remplacement d'un employé est élevé)
+- **Réduire les faux négatifs** : un employé prédit "Reste" qui part réellement est plus coûteux qu'une alerte inutile
+
+Ce choix est un compromis volontaire entre précision et recall, justifié par le domaine métier.
+
+### Protocole de mise à jour du modèle
+
+Le modèle est actuellement statique (fichier `ml_model/pipeline.pkl` versionné dans Git).
+
+Pour le réentraîner :
+1. Exporter les nouvelles données depuis la table `predictions`
+2. Réentraîner le pipeline scikit-learn sur les données enrichies
+3. Sauvegarder le nouveau `pipeline.pkl`
+4. Ouvrir une PR sur `main` → le CI/CD redéploie automatiquement le modèle
+
+---
+
+## Besoins analytiques
+
+La table `predictions` constitue un **journal de bord structuré** de toutes les prédictions émises par l'API. Chaque ligne contient les inputs complets de l'employé, la prédiction, la probabilité associée et un horodatage automatique.
+
+### Exemples de métriques exploitables
+
+| Analyse | Champ(s) concerné(s) |
+|---|---|
+| Taux de churn prédit par département | `GROUP BY departement` sur `prediction = 1` |
+| Évolution du risque dans le temps | `GROUP BY DATE_TRUNC('month', created_at)` |
+| Profils à risque élevé (probabilité > 0.7) | `WHERE probabilite > 0.7` |
+| Corrélation churn / heures supplémentaires | `GROUP BY heure_supplementaires` |
+| Distribution par niveau hiérarchique | `GROUP BY niveau_hierarchique_poste` |
+
+> Ces analyses peuvent alimenter un tableau de bord BI (Metabase, Superset, Power BI) connecté directement à la base PostgreSQL.
