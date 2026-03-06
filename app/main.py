@@ -52,7 +52,7 @@ entraîné sur des données RH pour prédire la probabilité qu'un employé quit
 ### Authentification
 Toutes les routes protégées nécessitent un header `X-API-Key`.
 """,
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
 
