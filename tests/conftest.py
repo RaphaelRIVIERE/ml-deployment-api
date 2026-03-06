@@ -3,9 +3,12 @@ from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from app.main import app
 from app.db.session import get_db
+import hashlib
 
 
 TEST_API_KEY = "test-secret-key"
+TEST_API_KEY_HASH = hashlib.sha256(TEST_API_KEY.encode()).hexdigest()
+
 
 VALID_PAYLOAD = {
     "age": 35, "genre": "M", "statut_marital": "Marié(e)",
@@ -40,6 +43,6 @@ def client():
     mock_pipeline.predict_proba.return_value = [[0.70, 0.30]]
 
     with patch("app.main.load_pipeline", return_value=(mock_pipeline, 0.40)), \
-         patch.dict("os.environ", {"API_KEY": TEST_API_KEY}):
+         patch.dict("os.environ", {"API_KEY": TEST_API_KEY_HASH}):
         with TestClient(app) as c:
             yield c
