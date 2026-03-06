@@ -6,6 +6,8 @@ from app.schemas.prediction import PredictionInput, PredictionOutput
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.db import crud
+import hashlib
+import hmac
 
 router = APIRouter()
 
@@ -13,9 +15,11 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 async def verify_api_key(request: Request, api_key: str = Security(api_key_header)):
-    if not api_key or api_key != request.app.state.settings.api_key:
+    if not api_key:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Clé API manquante ou invalide")
-
+    hashed = hashlib.sha256(api_key.encode()).hexdigest()
+    if not hmac.compare_digest(hashed, request.app.state.settings.api_key):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Clé API manquante ou invalide")
 
 @router.get("/", tags=["Général"], summary="Accueil de l'API", description="Retourne les informations générales de l'API.")
 def root(request: Request):
