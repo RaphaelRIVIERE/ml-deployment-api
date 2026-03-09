@@ -10,7 +10,8 @@ from tests.conftest import VALID_PAYLOAD, TEST_API_KEY, TEST_API_KEY_HASH
 # Fixture : client avec le VRAI pipeline (pas de mock)
 @pytest.fixture(scope="module")
 def real_client():
-    with patch.dict("os.environ", {"API_KEY": TEST_API_KEY_HASH}):
+    with patch.dict("os.environ", {"API_KEY": TEST_API_KEY_HASH}), \
+         patch("app.middleware.logging.crud.log_request"):
         with TestClient(app) as c:
             yield c
 
@@ -54,7 +55,8 @@ def test_threshold_applied(proba_quitte, expected_label):
     mock_pipeline.predict_proba.return_value = [[1 - proba_quitte, proba_quitte]]
 
     with patch("app.main.load_pipeline", return_value=(mock_pipeline, threshold)), \
-         patch.dict("os.environ", {"API_KEY": TEST_API_KEY_HASH}):
+         patch.dict("os.environ", {"API_KEY": TEST_API_KEY_HASH}), \
+         patch("app.middleware.logging.crud.log_request"):
         with TestClient(app) as c:
             response = c.post(
                 "/predict",
