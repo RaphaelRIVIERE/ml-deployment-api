@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, SmallInteger, String, Boolean, Float, DateTime
+from sqlalchemy import Column, Integer, SmallInteger, String, Boolean, Float, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import DeclarativeBase
 
@@ -94,3 +94,15 @@ class Prediction(Base):
     # Outputs
     prediction = Column(SmallInteger, nullable=False)
     probabilite = Column(Float, nullable=False)
+
+
+class Log(Base):
+    __tablename__ = "logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    endpoint = Column(String, nullable=False)
+    method = Column(String, nullable=False)
+    status_code = Column(Integer, nullable=False)
+    response_time_ms = Column(Float, nullable=False)
+    prediction_id = Column(Integer, ForeignKey("predictions.id"), nullable=True)
