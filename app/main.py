@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.routing import APIRoute
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
 from sqlalchemy import create_engine
@@ -39,6 +40,7 @@ async def lifespan(app: FastAPI):
     )
     app.state.engine = create_engine(db_url)
     app.state.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=app.state.engine)
+    app.state.logged_paths = {route.path for route in app.routes if isinstance(route, APIRoute)}
     yield
     app.state.engine.dispose()
 

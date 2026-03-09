@@ -15,7 +15,7 @@ def log_prediction(db: Session, input_data: PredictionInput, output_data: Predic
     return record
 
 
-def log_request(db: Session, endpoint: str, method: str, status_code: int, response_time_ms: float, prediction_id: int = None) -> Log:
+def log_request(db: Session, endpoint: str, method: str, status_code: int, response_time_ms: float, prediction_id: int | None = None) -> Log:
     record = Log(
         endpoint=endpoint,
         method=method,

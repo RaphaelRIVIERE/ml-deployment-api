@@ -6,6 +6,8 @@ from fastapi import Request
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        if request.url.path not in request.app.state.logged_paths:
+            return await call_next(request)
         start = time.time()
         response = await call_next(request)
         response_time_ms = (time.time() - start) * 1000
