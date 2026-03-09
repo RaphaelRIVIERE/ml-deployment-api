@@ -42,7 +42,13 @@ def client():
     # 0.3 < seuil 0.40 → prédiction "Reste"
     mock_pipeline.predict_proba.return_value = [[0.70, 0.30]]
 
-    with patch("app.main.load_pipeline", return_value=(mock_pipeline, 0.40)), \
-         patch.dict("os.environ", {"API_KEY": TEST_API_KEY_HASH}):
+    with (
+        # remplace le vrai .pkl par le pipeline mocké
+        patch("app.main.load_pipeline", return_value=(mock_pipeline, 0.40)),
+        # injecte le hash de la clé de test
+        patch.dict("os.environ", {"API_KEY": TEST_API_KEY_HASH}),
+        # évite les écritures en DB pendant les tests
+        patch("app.middleware.logging.crud.log_request"),
+    ):
         with TestClient(app) as c:
-            yield c
+               yield c
