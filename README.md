@@ -219,6 +219,18 @@ erDiagram
         smallint prediction
         float probabilite
     }
+
+    LOGS {
+        int id PK
+        timestamptz timestamp
+        varchar endpoint
+        varchar method
+        int status_code
+        float response_time_ms
+        int prediction_id FK
+    }
+
+    PREDICTIONS ||--o{ LOGS : "prediction_id"
 ```
 
 ### Contraintes notables
@@ -532,9 +544,10 @@ Réponse JSON (PredictionOutput)
 | Table | Contenu | Usage |
 |---|---|---|
 | `employees` | Dataset RH complet (1470 lignes) | Référence statique, utilisée pour l'entraînement initial du modèle |
-| `predictions` | Log de chaque appel API | Traçabilité, analyse des prédictions, tableau de bord |
+| `predictions` | Log de chaque appel à `POST /predict` | Traçabilité, analyse des prédictions, tableau de bord |
+| `logs` | Log de chaque requête HTTP | Monitoring, traçabilité complète, jointure avec `predictions` |
 
-Les deux tables sont **indépendantes** : un employé soumis à prédiction n'a pas à exister dans `employees`.
+`employees` est indépendante des deux autres : un employé soumis à prédiction n'a pas à exister dans `employees`. `logs` est liée à `predictions` via `prediction_id` (nullable) : seuls les appels à `POST /predict` ont une FK renseignée.
 
 ---
 

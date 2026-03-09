@@ -54,5 +54,7 @@ def predict_churn(data: PredictionInput, request: Request, db: Session = Depends
     prediction = int(proba >= threshold)
     label = "Quitte" if prediction == 1 else "Reste"
     output = PredictionOutput(prediction=prediction, label=label, probabilite=round(proba, 4))
-    crud.log_prediction(db, data, output)
+    record = crud.log_prediction(db, data, output)
+    request.state.prediction_id = record.id
+
     return output

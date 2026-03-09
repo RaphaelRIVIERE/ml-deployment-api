@@ -1,11 +1,13 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.routing import APIRoute
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.routes import predict
 from ml_model.loader import load_pipeline
+from app.middleware.logging import LoggingMiddleware
 
 
 class Settings(BaseSettings):
@@ -38,6 +40,7 @@ async def lifespan(app: FastAPI):
     )
     app.state.engine = create_engine(db_url)
     app.state.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=app.state.engine)
+    app.state.logged_paths = {route.path for route in app.routes if isinstance(route, APIRoute)}
     yield
     app.state.engine.dispose()
 
@@ -52,8 +55,10 @@ entraîné sur des données RH pour prédire la probabilité qu'un employé quit
 ### Authentification
 Toutes les routes protégées nécessitent un header `X-API-Key`.
 """,
-    version="1.1.0",
+    version="1.2.0",
     lifespan=lifespan,
 )
 
 app.include_router(predict.router)
+app.add_middleware(LoggingMiddleware)
+
