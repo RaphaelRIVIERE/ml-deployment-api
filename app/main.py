@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.routes import predict
 from ml_model.loader import load_pipeline
+from app.middleware.logging import LoggingMiddleware
 
 
 class Settings(BaseSettings):
@@ -57,3 +58,5 @@ Toutes les routes protégées nécessitent un header `X-API-Key`.
 )
 
 app.include_router(predict.router)
+app.add_middleware(LoggingMiddleware)
+

@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.db.models import Base, Prediction
-from app.db.crud import log_prediction
+from app.db.models import Base, Prediction, Log
+from app.db.crud import log_prediction, log_request
 from app.schemas.prediction import PredictionInput, PredictionOutput
 
 VALID_INPUT = PredictionInput(
@@ -58,6 +58,31 @@ def test_delete_prediction(db_session):
 
     result = db_session.get(Prediction, record_id)
     assert result is None
+
+def test_log_request_creates_record(db_session):
+    log_request(db_session, endpoint="/health", method="GET", status_code=200, response_time_ms=12.5)
+    result = db_session.query(Log).first()
+    assert result is not None
+    assert result.endpoint == "/health"
+    assert result.status_code == 200
+    assert result.prediction_id is None
+
+
+def test_log_request_with_prediction_id(db_session):
+    prediction = log_prediction(db_session, VALID_INPUT, VALID_OUTPUT)
+    log_request(db_session, endpoint="/predict", method="POST", status_code=200, response_time_ms=45.2, prediction_id=prediction.id)
+    result = db_session.query(Log).first()
+    assert result.prediction_id == prediction.id
+
+
+def test_log_request_jointure_prediction(db_session):
+    prediction = log_prediction(db_session, VALID_INPUT, VALID_OUTPUT)
+    log_request(db_session, endpoint="/predict", method="POST", status_code=200, response_time_ms=45.2, prediction_id=prediction.id)
+    result = db_session.query(Log, Prediction).join(Prediction, Log.prediction_id == Prediction.id).first()
+    assert result is not None
+    log, pred = result
+    assert pred.prediction == 0
+
 
 def test_missing_required_field_raises_integrity_error(db_session):
     from sqlalchemy.exc import IntegrityError
