@@ -15,6 +15,16 @@ def log_prediction(db: Session, input_data: PredictionInput, output_data: Predic
     return record
 
 
+def get_predictions(db: Session, skip: int = 0, limit: int = 100) -> list[Prediction]:
+    return (
+        db.query(Prediction)
+        .order_by(Prediction.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
 def log_request(db: Session, endpoint: str, method: str, status_code: int, response_time_ms: float, prediction_id: int | None = None) -> Log:
     record = Log(
         endpoint=endpoint,

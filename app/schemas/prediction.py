@@ -1,5 +1,6 @@
+from datetime import datetime
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 class PredictionInput(BaseModel):
@@ -55,3 +56,17 @@ class PredictionOutput(BaseModel):
     prediction: int = Field(..., description="0 = Reste, 1 = Quitte")
     label: str = Field(..., description="Libellé de la prédiction : 'Reste' ou 'Quitte'")
     probabilite: float = Field(..., description="Probabilité de départ estimée par le modèle (entre 0.0 et 1.0)")
+
+
+class PredictionRecord(PredictionInput):
+    id: int
+    created_at: datetime
+    prediction: int
+    probabilite: float
+
+    @computed_field
+    @property
+    def label(self) -> str:
+        return "Quitte" if self.prediction == 1 else "Reste"
+
+    model_config = {"from_attributes": True}
