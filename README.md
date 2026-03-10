@@ -36,7 +36,7 @@ ml-deployment-api/
 │
 ├── scripts/
 │   ├── create_db.py
-│   ├── insert_data.py
+│   ├── insert_data.py        # Insère les employés (fixtures par défaut, ou dataset complet en argument)
 │   └── query_db.py
 │
 ├── tests/
@@ -51,9 +51,8 @@ ml-deployment-api/
 ├── data/
 │   └── dataset.csv
 │
-├── examples/
-│   ├── input_sample.csv          # Exemples d'inputs envoyés au modèle ML
-│   └── output_sample.csv         # Exemples d'outputs retournés par le modèle ML
+├── fixtures/
+│   └── employees.csv             # 20 employés représentatifs (structure table `employees`)
 │
 ├── .github/workflows/
 │   └── ci_cd.yml
@@ -99,9 +98,14 @@ docker-compose up -d
 python scripts/create_db.py
 ```
 
-6. Insérer le dataset
+6. Insérer les données dans la table `employees`
+
 ```bash
+# Fixtures d'exemple par défaut (20 employés représentatifs)
 python scripts/insert_data.py
+
+# Ou avec le dataset complet (~1470 employés)
+python scripts/insert_data.py data/dataset.csv
 ```
 
 ## Configuration
@@ -139,15 +143,25 @@ Le fichier `.env.example` contient les variables suivantes :
 
 ### Schéma des tables
 
-#### `employees` — dataset complet (1470 lignes)
+#### `employees` — dataset RH
 
-Stocke l'intégralité du dataset HR. La colonne `a_quitte_l_entreprise` est convertie de `"Oui"/"Non"` en `BOOLEAN`.
+Stocke les employés. La colonne `a_quitte_l_entreprise` est convertie de `"Oui"/"Non"` en `BOOLEAN`.
 
-#### `predictions` — log des appels API
+Peuplée via `scripts/insert_data.py` (fixtures de 20 employés par défaut, ou dataset complet en argument).
+
+#### `predictions` — historique des appels API
 
 Enregistre chaque appel à `POST /predict` avec les inputs envoyés, les outputs retournés et un timestamp automatique (`created_at TIMESTAMPTZ`).
 
-> Les deux tables sont **indépendantes** : les prédictions API ne référencent pas la table `employees` car les employés soumis à prédiction ne sont pas forcément dans le dataset.
+> Pas de fixtures pour cette table : elle se peuple **automatiquement** à chaque appel à `POST /predict`. Cela garantit que les données reflètent de vraies interactions avec le modèle.
+
+#### `logs` — traces HTTP
+
+Enregistre chaque requête HTTP reçue par l'API (endpoint, méthode, code retour, temps de réponse). Pour les appels à `/predict`, la colonne `prediction_id` référence la prédiction associée.
+
+> Pas de fixtures pour cette table : elle se peuple **automatiquement** via le middleware à chaque requête entrante.
+
+> Les tables `predictions` et `employees` sont **indépendantes** : les prédictions API ne référencent pas `employees` car les employés soumis à prédiction ne sont pas forcément dans le dataset.
 
 ### Diagramme UML
 
