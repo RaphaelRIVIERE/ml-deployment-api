@@ -1,0 +1,21 @@
+age,genre,revenu_mensuel,statut_marital,departement,poste,nombre_experiences_precedentes,annee_experience_totale,annees_dans_l_entreprise,annees_dans_le_poste_actuel,satisfaction_employee_environnement,note_evaluation_precedente,niveau_hierarchique_poste,satisfaction_employee_nature_travail,satisfaction_employee_equipe,satisfaction_employee_equilibre_pro_perso,note_evaluation_actuelle,heure_supplementaires,augmentation_salaire_precedente,a_quitte_l_entreprise,nombre_participation_pee,nb_formations_suivies,distance_domicile_travail,niveau_education,domaine_etude,frequence_deplacement,annees_depuis_la_derniere_promotion,annees_sous_responsable_actuel
+41,F,5993,Célibataire,Commercial,Cadre Commercial,8,8,6,4,2,3,2,4,1,1,3,Oui,11,Oui,0,0,1,2,Infra & Cloud,Occasionnel,0,5
+49,M,5130,Marié(e),Consulting,Assistant de Direction,1,10,10,7,3,2,2,2,4,3,4,Non,23,Non,1,3,8,1,Infra & Cloud,Frequent,1,7
+37,M,2090,Célibataire,Consulting,Consultant,6,7,0,0,4,2,1,3,2,3,3,Oui,15,Oui,0,3,2,2,Autre,Occasionnel,0,0
+33,F,2909,Marié(e),Consulting,Assistant de Direction,1,8,8,7,4,3,1,3,3,3,3,Oui,11,Non,0,3,3,4,Infra & Cloud,Frequent,3,0
+27,M,3468,Marié(e),Consulting,Consultant,9,6,2,2,1,3,1,2,4,3,3,Non,12,Oui,1,3,2,1,Transformation Digitale,Occasionnel,2,2
+32,M,3068,Célibataire,Consulting,Consultant,0,8,7,7,4,3,1,4,3,2,3,Non,13,Non,0,2,2,2,Infra & Cloud,Frequent,3,6
+59,F,2670,Marié(e),Consulting,Consultant,4,12,1,0,3,4,1,1,1,2,4,Oui,20,Oui,3,3,3,3,Transformation Digitale,Occasionnel,0,0
+30,M,2693,Divorcé(e),Consulting,Consultant,1,1,1,0,4,3,1,3,2,3,4,Non,22,Non,1,2,24,1,Infra & Cloud,Occasionnel,0,0
+46,M,5021,Divorcé(e),Ressources Humaines,Ressources Humaines,8,16,4,2,2,3,2,2,4,3,4,Oui,22,Non,1,2,5,2,Transformation Digitale,Occasionnel,0,2
+37,M,2073,Divorcé(e),Ressources Humaines,Ressources Humaines,4,7,3,2,3,3,1,1,4,3,4,Oui,22,Oui,0,3,6,4,Ressources Humaines,Occasionnel,0,2
+59,F,18844,Marié(e),Ressources Humaines,Senior Manager,9,30,3,2,3,2,5,4,4,3,4,Non,21,Non,1,3,2,4,Ressources Humaines,Aucun,2,2
+54,F,17328,Célibataire,Ressources Humaines,Senior Manager,2,23,5,3,4,4,4,4,3,3,3,Oui,12,Non,0,3,26,3,Ressources Humaines,Aucun,4,4
+53,F,15427,Marié(e),Commercial,Senior Manager,2,31,25,8,1,2,4,4,3,3,3,Non,16,Non,0,3,2,4,Infra & Cloud,Occasionnel,3,7
+36,M,3407,Célibataire,Commercial,Représentant Commercial,7,10,5,3,3,2,1,1,2,3,4,Non,23,Oui,0,4,9,4,Infra & Cloud,Occasionnel,0,3
+42,M,6825,Marié(e),Commercial,Cadre Commercial,0,10,9,7,3,3,2,2,4,3,3,Non,11,Non,1,2,8,4,Marketing,Occasionnel,4,2
+46,F,18947,Célibataire,Commercial,Senior Manager,3,22,2,2,2,3,5,1,4,2,3,Non,12,Non,0,2,2,4,Marketing,Occasionnel,2,1
+28,M,2028,Célibataire,Consulting,Consultant,5,6,4,2,3,2,1,3,2,3,3,Oui,14,Oui,0,4,24,3,Infra & Cloud,Occasionnel,0,3
+34,M,2960,Célibataire,Consulting,Assistant de Direction,2,8,4,2,2,3,1,1,3,3,3,Non,11,Oui,0,2,6,1,Transformation Digitale,Occasionnel,1,3
+38,M,9526,Célibataire,Consulting,Tech Lead,0,10,9,7,4,2,3,3,2,3,4,Non,21,Non,0,2,23,3,Infra & Cloud,Frequent,1,8
+24,F,4011,Divorcé(e),Consulting,Tech Lead,0,5,4,2,1,4,2,3,4,2,3,Non,18,Non,1,5,11,2,Autre,Aucun,1,3
