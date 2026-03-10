@@ -8,4 +8,5 @@ def get_db(request: Request) -> Generator[Session, None, None]:
     try:
         yield db
     finally:
+        # Garantit la fermeture de la session même en cas d'erreur
         db.close()

@@ -6,6 +6,7 @@ from fastapi import Request
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        # Ignore les routes non enregistrées (ex: /docs, /openapi.json)
         if request.url.path not in request.app.state.logged_paths:
             return await call_next(request)
         start = time.time()

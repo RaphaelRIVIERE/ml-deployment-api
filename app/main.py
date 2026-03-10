@@ -31,6 +31,7 @@ class Settings(BaseSettings):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Charge le pipeline ML, initialise la DB et les chemins loggés au démarrage
     app.state.pipeline, app.state.threshold = load_pipeline()
     settings = Settings()
     app.state.settings = settings
@@ -45,9 +46,9 @@ async def lifespan(app: FastAPI):
     app.state.engine.dispose()
 
 app = FastAPI(
-    title="Futurisys HR Churn API",
+    title="Futurisys - Prédiction du Risque d'Attrition RH",
     description="""
-## API de prédiction du risque de départ des employés
+## API de prédiction du risque d'attrition RH
 
 Déployée pour **Futurisys**, cette API expose un modèle de Machine Learning (Régression Logistique)
 entraîné sur des données RH pour prédire la probabilité qu'un employé quitte l'entreprise.
@@ -55,7 +56,7 @@ entraîné sur des données RH pour prédire la probabilité qu'un employé quit
 ### Authentification
 Toutes les routes protégées nécessitent un header `X-API-Key`.
 """,
-    version="1.3.1",
+    version="1.3.2",
     lifespan=lifespan,
 )
 
