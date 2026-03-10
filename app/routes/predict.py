@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, Request, Security, status
 from fastapi.security import APIKeyHeader
-from app.schemas.prediction import PredictionInput, PredictionOutput
+from app.schemas.prediction import PredictionInput, PredictionOutput, PredictionRecord
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.db import crud
@@ -58,3 +58,20 @@ def predict_churn(data: PredictionInput, request: Request, db: Session = Depends
     request.state.prediction_id = record.id
 
     return output
+
+
+@router.get(
+    "/predictions",
+    tags=["Prédictions"],
+    response_model=list[PredictionRecord],
+    summary="Historique des prédictions",
+    description="Retourne la liste des prédictions enregistrées en base de données, triées de la plus récente à la plus ancienne.",
+    dependencies=[Depends(verify_api_key)],
+)
+def get_predictions(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+):
+    records = crud.get_predictions(db, skip=skip, limit=limit)
+    return [PredictionRecord.model_validate(r) for r in records]

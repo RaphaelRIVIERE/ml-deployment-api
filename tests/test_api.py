@@ -38,3 +38,19 @@ def test_predict_invalid_data(client):
 def test_predict_no_api_key(client):
     response = client.post("/predict", json=VALID_PAYLOAD)
     assert response.status_code == 401
+
+
+# Tester GET /predictions avec API Key valide
+def test_get_predictions_authenticated(client):
+    response = client.get(
+        "/predictions",
+        headers={"X-API-Key": TEST_API_KEY},
+    )
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
+
+# Tester GET /predictions sans API Key → 401
+def test_get_predictions_no_api_key(client):
+    response = client.get("/predictions")
+    assert response.status_code == 401

@@ -397,6 +397,72 @@ Réponse :
 | `label` | string | `"Reste"` ou `"Quitte"` |
 | `probabilite` | float | Probabilité de départ (entre 0 et 1) |
 
+---
+
+#### `GET /predictions` — Historique des prédictions
+
+Retourne la liste des prédictions enregistrées en base, triées de la plus récente à la plus ancienne. Authentification requise.
+
+**Paramètres query (optionnels) :**
+| Paramètre | Type | Défaut | Description |
+|---|---|---|---|
+| `skip` | int | 0 | Décalage (pagination) |
+| `limit` | int | 100 | Nombre max de résultats |
+
+```bash
+curl http://localhost:8000/predictions?limit=10 \
+  -H "X-API-Key: ta_clé_secrète"
+```
+
+---
+
+## Analyse des données & tableau de bord
+
+La table `predictions` constitue un journal structuré de toutes les interactions
+avec le modèle. Elle peut être exploitée pour du reporting RH en temps réel.
+
+### Requêtes analytiques disponibles
+
+Le script `scripts/query_db.py` expose les requêtes suivantes :
+
+| Fonction | Description |
+|---|---|
+| `stats_employees(session)` | Nombre d'employés dans le dataset, taux de churn réel |
+| `stats_predictions(session)` | Nombre de prédictions loggées, date de la dernière |
+| `predict_from_db(session, id)` | Charge un employé, prédit et compare au label réel |
+| `apercu_employees(session, n)` | Affiche les N premiers employés du dataset |
+
+**Lancer l'analyse :**
+```bash
+python scripts/query_db.py
+```
+
+### Cas d'usage analytiques
+
+La table `predictions` permet de répondre aux questions métier suivantes :
+
+- **Taux de risque global** : quelle proportion d'employés soumis au modèle
+  sont prédits "à risque" ?
+- **Évolution dans le temps** : le taux de prédictions "Quitte" augmente-t-il
+  sur les dernières semaines ?
+- **Profils à risque dominants** : quels postes ou départements concentrent
+  le plus de prédictions `1` ?
+- **Distribution des probabilités** : combien de prédictions sont proches du
+  seuil 0.40 (zone d'incertitude) ?
+
+### Exemple de requête SQL directe
+
+```sql
+-- Taux de risque prédit par département
+SELECT departement,
+       COUNT(*) AS nb_predictions,
+       SUM(prediction) AS nb_a_risque,
+       ROUND(100.0 * SUM(prediction) / COUNT(*), 1) AS taux_risque_pct
+FROM predictions
+GROUP BY departement
+ORDER BY taux_risque_pct DESC;
+```
+
 ## Tests
 
 ### Lancer les tests
