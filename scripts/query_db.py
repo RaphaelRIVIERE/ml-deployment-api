@@ -82,7 +82,9 @@ if __name__ == "__main__":
     try:
         stats_employees(session)
         apercu_employees(session, n=5)
-        predict_from_db(session, employee_id=1)
+        first_employee = session.query(Employee).first()
+        if first_employee:
+            predict_from_db(session, employee_id=first_employee.id)
         stats_predictions(session)
     finally:
         session.close()
