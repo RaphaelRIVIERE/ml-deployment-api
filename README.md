@@ -6,7 +6,7 @@ colorTo: green
 sdk: docker
 pinned: false
 ---
-![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen)
 
 # API de prédiction d'attrition RH
 
@@ -18,48 +18,47 @@ API REST de prédiction du risque d'attrition RH développée avec FastAPI. Elle
 ```
 ml-deployment-api/
 │
-├── app/
-│   ├── main.py
+├── app/                              # Code source de l'API FastAPI
+│   ├── main.py                       # Point d'entrée FastAPI, config et middlewares
 │   ├── routes/
-│   │   └── predict.py
+│   │   └── predict.py                # Endpoints /predict et /predictions
+│   ├── middleware/
+│   │   └── logging.py                # Middleware de logging HTTP (table logs)
 │   ├── schemas/
-│   │   └── prediction.py
+│   │   └── prediction.py             # Modèles Pydantic input/output
 │   ├── db/
-│   │   ├── models.py
-│   │   ├── session.py
-│   │   └── crud.py
+│   │   ├── models.py                 # Modèles SQLAlchemy (ORM)
+│   │   ├── session.py                # Connexion PostgreSQL
+│   │   └── crud.py                   # Opérations CRUD
 │
-├── ml_model/
+├── ml_model/                         # Pipeline ML sérialisé et logique d'inférence
 │   ├── pipeline.pkl
 │   ├── preprocessing.py
-│   └── loader.py
+│   └── loader.py                     # Chargement du pipeline et inférence
 │
-├── scripts/
-│   ├── create_db.py
-│   ├── insert_data.py        # Insère les employés (fixtures par défaut, ou dataset complet en argument)
-│   └── query_db.py
+├── scripts/                          # Scripts utilitaires (BDD, données)
+│   ├── create_db.py                  # Création des tables
+│   ├── insert_data.py                # Insère les employés (fixtures par défaut, ou dataset complet en argument)
+│   └── query_db.py                   # Requêtes analytiques
 │
-├── tests/
-│   ├── conftest.py
+├── tests/                            # Tests unitaires et d'intégration
+│   ├── conftest.py                   # Fixtures partagées
 │   ├── test_api.py
 │   ├── test_model.py
 │   └── test_db.py
 │
-├── docs/
+├── docs/                             # Documentation et diagrammes
 │   └── uml.png
 │
-├── data/
-│   └── dataset.csv
+├── fixtures/                         # Données d'exemple pour le développement
+│   └── employees.csv                 # 20 employés représentatifs (structure table `employees`)
 │
-├── fixtures/
-│   └── employees.csv             # 20 employés représentatifs (structure table `employees`)
-│
-├── .github/workflows/
+├── .github/workflows/                # Pipeline CI/CD GitHub Actions
 │   └── ci_cd.yml
 ├── Dockerfile
 ├── docker-compose.yaml
 ├── requirements.txt
-├── .env.example
+├── .env.example                      # Template de configuration (variables d'environnement)
 ├── .gitignore
 └── README.md
 ```
@@ -258,8 +257,6 @@ erDiagram
 | `created_at` | `TIMESTAMPTZ` — posé par PostgreSQL (`server_default=func.now()`) |
 | Scores satisfaction / évaluation | `SMALLINT` — valeurs entre `0` et `5` |
 
----
-
 ## Utilisation
 
 ### Lancer l'API
@@ -283,8 +280,6 @@ X-API-Key: ta_clé_secrète
 - L'API refuse de démarrer si `API_KEY` est vide ou absent du `.env`
 - Les secrets ne transitent jamais dans l'URL (header uniquement)
 
----
-
 ### Endpoints
 
 #### `GET /` — Accueil de l'API
@@ -299,13 +294,11 @@ Réponse :
 ```json
 {
   "name": "Futurisys HR Churn API",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "documentation": "http://localhost:8000/docs",
   "health": "http://localhost:8000/health"
 }
 ```
-
----
 
 #### `GET /health` — Health check
 
@@ -319,8 +312,6 @@ Réponse :
 ```json
 { "status": "ok", "message": "API opérationnelle" }
 ```
-
----
 
 #### `GET /model/info` — Informations sur le modèle
 
@@ -339,8 +330,6 @@ Réponse :
   "description": "Classification binaire — risque de départ RH (0 = Reste, 1 = Quitte)"
 }
 ```
-
----
 
 #### `POST /predict` — Prédiction du risque de départ
 
@@ -397,7 +386,6 @@ Réponse :
 | `label` | string | `"Reste"` ou `"Quitte"` |
 | `probabilite` | float | Probabilité de départ (entre 0 et 1) |
 
----
 
 #### `GET /predictions` — Historique des prédictions
 
@@ -413,8 +401,6 @@ Retourne la liste des prédictions enregistrées en base, triées de la plus ré
 curl http://localhost:8000/predictions?limit=10 \
   -H "X-API-Key: ta_clé_secrète"
 ```
-
----
 
 ## Analyse des données & tableau de bord
 
@@ -463,6 +449,8 @@ GROUP BY departement
 ORDER BY taux_risque_pct DESC;
 ```
 
+> Ces analyses peuvent alimenter un tableau de bord BI (Metabase, Superset, Power BI) connecté directement à la base PostgreSQL.
+
 ## Tests
 
 ### Lancer les tests
@@ -485,16 +473,18 @@ pytest tests/ --cov=app --cov-report=term-missing --cov-report=html
 
 ### Résultat de couverture
 
-Dernière mesure : **95%** (13 tests, 193 instructions)
+Dernière mesure : **96%** (18 tests, 247 instructions)
 
 | Fichier | Couverture |
 |---|---|
 | `app/db/crud.py` | 100% |
 | `app/db/models.py` | 100% |
-| `app/schemas/prediction.py` | 100% |
-| `app/routes/predict.py` | 98% |
-| `app/main.py` | 96% |
-| `app/db/session.py` | 56% *(infrastructure PostgreSQL, non testée en isolation)* |
+| `app/middleware/__init__.py` | 100% |
+| `app/schemas/prediction.py` | 98% |
+| `app/main.py` | 97% |
+| `app/middleware/logging.py` | 94% |
+| `app/routes/predict.py` | 93% |
+| `app/db/session.py` | 50% *(infrastructure PostgreSQL, non testée en isolation)* |
 
 
 ### Structure des tests
@@ -513,8 +503,8 @@ Dernière mesure : **95%** (13 tests, 193 instructions)
 
 | Environnement | Branche | URL | Base de données |
 |---|---|---|---|
-| Production | `main` | https://rriviere-attrition-api.hf.space | PostgreSQL Neon (instance prod) |
-| Développement | `dev` | https://rriviere-attrition-api-dev.hf.space | PostgreSQL Neon (instance dev) |
+| Production | `main` | https://rriviere-attrition-api.hf.space/docs | PostgreSQL Neon (instance prod) |
+| Développement | `dev` | https://rriviere-attrition-api-dev.hf.space/docs | PostgreSQL Neon (instance dev) |
 
 
 - **Documentation Swagger (prod)** : https://rriviere-attrition-api.hf.space/docs
@@ -525,9 +515,13 @@ En production et développement, PostgreSQL est hébergé sur Neon (serverless).
 
 Le déploiement est automatisé via GitHub Actions (`.github/workflows/ci_cd.yml`).
 
-**Déclenchement** :
-- Push sur `main` → tests + déploiement en **production**
-- Push sur `dev` → tests + déploiement en **développement**
+### Cartographie des environnements
+
+| Environnement | Déclencheur | Infrastructure |
+|---|---|---|
+| **CI / Tests unitaires** (éphémère) | Push/PR sur `main` ou `dev` | CI runner GitHub Actions (VM Ubuntu, détruite après les tests) |
+| **Développement** | Push sur `dev` | Hugging Face Space `dev` + PostgreSQL Neon (instance dev) |
+| **Production** | Push sur `main` | Hugging Face Space prod + PostgreSQL Neon (instance prod) |
 
 **Étapes :**
 1. **Test** — installation des dépendances + exécution de `pytest`
@@ -546,24 +540,7 @@ Le déploiement est automatisé via GitHub Actions (`.github/workflows/ci_cd.yml
 | `HF_SPACE_PROD` | Nom du Space HF de production (ex : `username/space-name`) |
 | `HF_SPACE_DEV` | Nom du Space HF de développement |
 
----
-
 ## Sécurité
-
-### Mécanisme d'authentification
-
-L'API utilise une authentification par clé API transmise dans le header HTTP `X-API-Key` :
-
-```bash
-curl http://localhost:8000/predict \
-  -H "X-API-Key: ta_clé_secrète" \
-  -H "Content-Type: application/json" \
-  ...
-```
-
-- Seul l'endpoint `GET /health` est public (pas d'authentification requise)
-- Une clé absente ou incorrecte retourne `401 Unauthorized`
-- La clé ne transite jamais dans l'URL pour éviter les fuites dans les logs serveur
 
 ### Gestion des secrets
 
@@ -586,12 +563,11 @@ Les secrets injectés au runtime sont : `API_KEY`, `HF_TOKEN`, `DB_PASSWORD`.
 
 > Cette implémentation est acceptable pour un POC / projet démonstratif.
 
-- La clé API est **statique et non hachée** : elle est comparée en clair en mémoire
+- La clé API est **statique et hachée (SHA-256)** : la comparaison se fait via `hmac.compare_digest` pour éviter les timing attacks
 - Pas de mécanisme de révocation ou d'expiration de token
 - Pas de rate limiting (protection contre le bruteforce absente)
 - En production réelle, préférer OAuth2 / JWT avec expiration
 
----
 
 ## Processus de stockage des données
 
@@ -619,17 +595,6 @@ Réponse JSON (PredictionOutput)
 
 > **Important** : chaque appel à `/predict` est **systématiquement loggé** en base de données avant le renvoi de la réponse. Il n'est pas possible d'obtenir une prédiction sans persistance.
 
-### Rôle des deux tables
-
-| Table | Contenu | Usage |
-|---|---|---|
-| `employees` | Dataset RH complet (1470 lignes) | Référence statique, utilisée pour l'entraînement initial du modèle |
-| `predictions` | Log de chaque appel à `POST /predict` | Traçabilité, analyse des prédictions, tableau de bord |
-| `logs` | Log de chaque requête HTTP | Monitoring, traçabilité complète, jointure avec `predictions` |
-
-`employees` est indépendante des deux autres : un employé soumis à prédiction n'a pas à exister dans `employees`. `logs` est liée à `predictions` via `prediction_id` (nullable) : seuls les appels à `POST /predict` ont une FK renseignée.
-
----
 
 ## Performances du modèle
 
@@ -665,21 +630,3 @@ Pour le réentraîner :
 2. Réentraîner le pipeline scikit-learn sur les données enrichies
 3. Sauvegarder le nouveau `pipeline.pkl`
 4. Ouvrir une PR sur `main` → le CI/CD redéploie automatiquement le modèle
-
----
-
-## Besoins analytiques
-
-La table `predictions` constitue un **journal de bord structuré** de toutes les prédictions émises par l'API. Chaque ligne contient les inputs complets de l'employé, la prédiction, la probabilité associée et un horodatage automatique.
-
-### Exemples de métriques exploitables
-
-| Analyse | Champ(s) concerné(s) |
-|---|---|
-| Taux de churn prédit par département | `GROUP BY departement` sur `prediction = 1` |
-| Évolution du risque dans le temps | `GROUP BY DATE_TRUNC('month', created_at)` |
-| Profils à risque élevé (probabilité > 0.7) | `WHERE probabilite > 0.7` |
-| Corrélation churn / heures supplémentaires | `GROUP BY heure_supplementaires` |
-| Distribution par niveau hiérarchique | `GROUP BY niveau_hierarchique_poste` |
-
-> Ces analyses peuvent alimenter un tableau de bord BI (Metabase, Superset, Power BI) connecté directement à la base PostgreSQL.
