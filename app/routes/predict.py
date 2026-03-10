@@ -15,6 +15,7 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 async def verify_api_key(request: Request, api_key: str = Security(api_key_header)):
+    # Compare le hash SHA-256 de la clé reçue avec celle stockée en config
     if not api_key:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Clé API manquante ou invalide")
     hashed = hashlib.sha256(api_key.encode()).hexdigest()
@@ -51,6 +52,7 @@ def predict_churn(data: PredictionInput, request: Request, db: Session = Depends
     threshold = request.app.state.threshold
     df = pd.DataFrame([data.model_dump()])
     proba = float(pipeline.predict_proba(df)[0][1])
+    # Applique le seuil personnalisé (≠ 0.5 par défaut scikit-learn)
     prediction = int(proba >= threshold)
     label = "Quitte" if prediction == 1 else "Reste"
     output = PredictionOutput(prediction=prediction, label=label, probabilite=round(proba, 4))
